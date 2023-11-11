@@ -1,0 +1,41 @@
+## Configuración para desplegar desde azure
+
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+- stage: deploy_stage
+  displayName: Terraform Stage
+  jobs:
+  - job: deploy_job
+    displayName: Terraform Job
+    steps:
+
+    - task: TerraformInstaller@1
+      displayName: Instalar Terraform
+      inputs:
+        terraformVersion: '1.6.3'
+      
+    - task: TerraformTaskV4@4
+      displayName: Terraform Init
+      inputs:
+        provider: 'aws'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        backendServiceAWS: 'sc-aws-terraform'
+        backendAWSBucketName: 'backend-s3-tf-state'
+        backendAWSKey: 'servidor/terraform.tfstate'
+
+    - task: TerraformTaskV4@4
+      displayName: Terraform Apply
+      inputs:
+        provider: 'aws'
+        command: 'apply'
+        commandOptions: '-var="tags=azure"'
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        environmentServiceNameAWS: 'sc-aws-terraform'
+
